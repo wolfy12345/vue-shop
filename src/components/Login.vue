@@ -51,7 +51,7 @@
                     if(!valid)  return;
                     this.$http.post("login", this.loginForm).then(res => {
                         // console.log(res);
-                        if(res.data.meta.status == 200) {
+                        if(res.data.meta.status === 200) {
                             this.$message.success("登录成功")
 
                             const token = res.data.data.token;
