@@ -50,8 +50,9 @@
                 <el-table-column
                         label="操作">
                     <template v-slot="scope">
-                        <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
-                        <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+                        <el-button type="primary" icon="el-icon-edit" size="mini"
+                                   @click="showEditDialog(scope.row.id)"></el-button>
+                        <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteUser(scope.row.id)"></el-button>
                         <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
                             <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
                         </el-tooltip>
@@ -95,6 +96,28 @@
                 <el-button type="primary" @click="addUser">确 定</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog
+                title="提示"
+                :visible.sync="editDialogVisible"
+                width="50%" @close="editDialogClosed">
+
+            <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="70px">
+                <el-form-item label="用户名">
+                    <el-input v-model="editForm.username" disabled></el-input>
+                </el-form-item>
+                <el-form-item label="邮箱" prop="email">
+                    <el-input v-model="editForm.email"></el-input>
+                </el-form-item>
+                <el-form-item label="手机" prop="mobile">
+                    <el-input v-model="editForm.mobile"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="editDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="editUser">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -128,12 +151,14 @@
                 userList: [],
                 total: 0,
                 addDialogVisible: false,
+                editDialogVisible: false,
                 addForm: {
                     username: '',
                     password: '',
                     email: '',
                     mobile: ''
                 },
+                editForm: {},
                 addFormRules: {
                     username: [
                         {required: true, message: '请输入用户名', trigger: 'blur'},
@@ -151,6 +176,16 @@
                         {required: true, message: '请输入手机', trigger: 'blur'},
                         {validator: checkMobile, trigger: 'blur'}
                     ]
+                },
+                editFormRules: {
+                    email: [
+                        {required: true, message: '请输入邮箱', trigger: 'blur'},
+                        {validator: checkEmail, trigger: 'blur'}
+                    ],
+                    mobile: [
+                        {required: true, message: '请输入手机', trigger: 'blur'},
+                        {validator: checkMobile, trigger: 'blur'}
+                    ]
                 }
             }
         },
@@ -160,6 +195,7 @@
         methods: {
             getUserList() {
                 this.$http.get("users", {params: this.queryInfo}).then(res => {
+                    console.log(res)
                     const {data} = res;
                     if (data.meta.status !== 200) return this.$message.error("获取用户列表失败")
                     this.userList = data.data.users;
@@ -211,6 +247,63 @@
                         console.log(err);
                     })
                 })
+            },
+            showEditDialog(id) {
+                this.$http.get('users/' + id).then(res => {
+                    if(res.data.meta.status !== 200) {
+                        return this.$message.error("获取用户信息失败")
+                    }
+
+                    this.editForm = res.data.data;
+                    this.editDialogVisible = true
+                })
+            },
+            editDialogClosed() {
+                this.$refs.editFormRef.resetFields();
+            },
+            editUser() {
+                this.$refs.editFormRef.validate(valid => {
+                    if(!valid) {
+                        return
+                    }
+                    this.$http.put('users/' + this.editForm.id, {
+                        email: this.editForm.email,
+                        mobile: this.editForm.mobile
+                    }).then(res => {
+                        // console.log(res);
+                        if(res.data.meta.status !== 200) {
+                            return this.$message.error("更新用户失败")
+                        }
+
+                        this.$message.success("更新用户成功")
+                        this.editDialogVisible = false
+                        this.getUserList()
+                    })
+                })
+            },
+            deleteUser(id) {
+                this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.$http.delete('users/' + id).then(res=>{
+                        if(res.data.meta.status !== 200) {
+                            return this.$message.error("删除失败")
+                        }
+
+                        this.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        });
+                        this.getUserList()
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
             }
         }
     }
