@@ -13,7 +13,7 @@
                 <el-menu
                         background-color="#333744"
                         text-color="#fff"
-                        active-text-color="#409eff" unique-opened :collapse="isCollapse" :collapse-transition="false" router>
+                        active-text-color="#409eff" unique-opened :collapse="isCollapse" :collapse-transition="false" router :default-active="$route.path">
                     <el-submenu :index="item.id + ''" v-for="item in menuList" :key="item.id">
                         <template slot="title">
                             <i class="el-icon-location"></i>

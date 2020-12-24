@@ -5,6 +5,7 @@ import Login from "@/components/Login"
 
 const Home = () => import("@/components/Home")
 const Welcome = () => import("@/components/Welcome")
+const Users = () => import("@/components/user/Users")
 
 Vue.use(VueRouter)
 
@@ -25,6 +26,10 @@ const routes = [
       {
         path: '/welcome',
         component: Welcome
+      },
+      {
+        path: '/users',
+        component: Users
       }
     ]
   }
